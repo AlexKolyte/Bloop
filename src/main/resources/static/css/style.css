@@ -1,0 +1,807 @@
+
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+html,body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-weight: 400;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.58;
+    color: #333;
+    background-color: #f4f4f4;
+    height: 100%;
+}
+
+.clearfix:after {
+    display: block;
+    content: "";
+    clear: both;
+}
+
+.hidden {
+    display: none;
+}
+
+.form-control {
+    width: 100%;
+    min-height: 38px;
+    font-size: 15px;
+    border: 1px solid #c8c8c8;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+input {
+    padding-left: 10px;
+    outline: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 1.7em;
+}
+
+a {
+    color: #6db33f;
+}
+
+button {
+    box-shadow: none;
+    border: 1px solid transparent;
+    font-size: 14px;
+    outline: none;
+    line-height: 100%;
+    white-space: nowrap;
+    vertical-align: middle;
+    padding: 0.6rem 1rem;
+    border-radius: 2px;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    min-height: 38px;
+}
+
+button.default {
+    background-color: #e8e8e8;
+    color: #333;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.12);
+}
+
+button.primary {
+    background-color: #6db33f;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.12);
+    color: #fff;
+}
+
+button.accent {
+    background-color: #6db33f;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.12);
+    color: #fff;
+}
+
+#username-page {
+    text-align: center;
+}
+
+.username-page-container {
+    background: #fff;
+    box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
+    border-radius: 2px;
+    width: 100%;
+    height:calc(90%);
+    max-width: 500px;
+    display: inline-block;
+    margin-top: 42px;
+    vertical-align: middle;
+    position: relative;
+    padding: 35px 55px 35px;
+    min-height: 150px;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    margin-top: -350px;
+}
+
+.username-page-container .username-submit {
+    margin-top: 10px;
+}
+
+
+//
+#sign-in-page {
+    text-align: center;
+}
+
+.sign-in-page-container {
+    background: #fff;
+    box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
+    border-radius: 2px;
+    width: 100%;
+    max-width: 500px;
+    display: inline-block;
+    margin-top: 42px;
+    vertical-align: middle;
+    position: relative;
+    padding: 35px 55px 35px;
+    min-height: 150px;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    margin-top: -350px;
+}
+//
+
+
+#chat-page {
+    position: relative;
+    height: 100%;
+}
+
+.chat-container {
+    background: #ffffff;
+    box-shadow: 0 1px 11px rgba(0, 0, 0, 0.1);
+    border-radius: 10px 0 0 10px; /* Rounded left edge only */
+    width: 60vw; /* Default width of 60% of screen */
+    height: 100vh; /* Full height */
+    position: absolute;
+    right: 0; /* Pushed to the right */
+    top: 0;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    resize: horizontal; /* Enables horizontal resizing */
+    overflow: auto; /* Allows scrolling when resized */
+    min-width: 75vw; /* Minimum width for the container */
+    max-width: 75vw; /* Prevents the container from getting wider than the screen */
+}
+
+
+
+
+
+
+
+
+
+@media screen and (max-width: 600px) {
+    .chat-container {
+        padding: 20px;
+        width: 95%;
+        height: 95%;
+        border-radius: 8px;
+    }
+}
+
+
+#chat-page ul {
+    list-style-type: none;
+    background: linear-gradient(to bottom, #f9f9f9, #eef7ff);
+    margin: 0;
+    overflow-y: auto;
+    padding: 10px 15px;
+    flex-grow: 1;
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+    height: calc(100vh - 120px); /* Adjust height if needed */
+}
+
+
+#chat-page #messageForm {
+    padding: 0px;
+}
+
+#chat-page ul li {
+    line-height: 1.5rem;
+    padding: 10px 20px;
+    margin: 0;
+    border-bottom: 1px solid #f4f4f4;
+}
+
+#chat-page ul li p {
+    margin: 0;
+}
+
+#chat-page .event-message {
+    width: 100%;
+    text-align: center;
+    clear: both;
+}
+
+#chat-page .event-message p {
+    color: #777;
+    font-size: 14px;
+    word-wrap: break-word;
+}
+
+#chat-page .chat-message {
+    padding-left: 68px;
+    position: relative;
+}
+
+#chat-page .chat-message i {
+    position: absolute;
+    width: 42px;
+    height: 42px;
+    overflow: hidden;
+    left: 10px;
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 18px;
+    line-height: 42px;
+    color: #fff;
+    text-align: center;
+    border-radius: 50%;
+    font-style: normal;
+    text-transform: uppercase;
+}
+
+#chat-page .chat-message span {
+    color: #333;
+    font-weight: 600;
+}
+
+#chat-page .chat-message p {
+    color: #43464b;
+}
+
+#messageForm .input-group input {
+    float: left;
+    width: calc(100% - 85px);
+}
+
+#messageForm .input-group button {
+    float: left;
+    width: 80px;
+    height: 38px;
+    margin-left: 5px;
+}
+
+.chat-header {
+    text-align: center;
+    padding: 15px;
+    border-bottom: 1px solid #ececec;
+}
+
+.chat-header h2 {
+    margin: 0;
+    font-weight: 500;
+}
+
+.connecting {
+    padding-top: 5px;
+    text-align: center;
+    color: #777;
+    position: absolute;
+    top: 65px;
+    width: 100%;
+}
+
+
+@media screen and (max-width: 730px) {
+
+    .chat-container {
+        margin-left: 10px;
+        margin-right: 10px;
+        margin-top: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .chat-container {
+        height: 100%;
+    }
+
+    .username-page-container {
+        width: auto;
+        margin-left: 15px;
+        margin-right: 15px;
+        padding: 25px;
+    }
+
+    #chat-page ul {
+        height: calc(100% - 120px);
+    }
+
+    #messageForm .input-group button {
+        width: 65px;
+    }
+
+    #messageForm .input-group input {
+        width: calc(100% - 70px);
+    }
+
+    .chat-header {
+        padding: 10px;
+    }
+
+    .connecting {
+        top: 60px;
+    }
+
+    .chat-header h2 {
+        font-size: 1.1em;
+    }
+}
+.login-box{
+    display:flex;
+    justify-content:left;
+    flex-direction:column;
+    width:600px;
+    height:480px;
+    padding:50px;
+}
+
+.login-header{
+  text-align:left;
+  margin:30px 0 50px 0;
+}
+
+.login-header header{
+  color: #690ee0;
+  font-size: 50px;
+  font-weight: 600px;
+}
+
+.input-box .input-field{
+  width:350px;
+  height: 30px;
+  font-size: 16px;
+  padding: 0 30px;
+  margin-bottom: 17px;
+  border-radius:50px;
+  border:none;
+  box-shadow: 0px 5px 10px 1px rgb(224, 226, 233);
+  outline:none;
+  transition: .5s;
+}
+
+::placeholder{
+  font-weight: 400;
+  color:rgb(9, 10, 10);
+}
+
+.input-field:focus{
+  display:flex;
+  justify-content:center;
+  margin-bottom:80px;
+}
+
+section{
+  display:flex;
+  align-items:center;
+  font-size:16px;
+  color:rgb(3, 3, 3);
+}
+
+#check{
+  margin-right: 12px;
+}
+
+a{
+  text-decoration-style:none;
+}
+
+a:hover{
+  text-decoration:none;
+}
+
+section a{
+  color:#bbb;
+  margin-top:10px;
+}
+
+.input-submit{
+  position:center;
+}
+
+.submit-btn{
+  width:250px;
+  height: 30px;
+  background:rgb(10, 96, 76);
+  border:none;
+  border-radius: 12px;
+  cursor:pointer;
+  transition: .3s;
+}
+
+.input-submit{
+  margin-top: 10px;
+  position: center;
+  top:15%;
+  left: 20%;
+  color: red;
+  cursor: pointer;;
+}
+
+.submit-btn:hover{
+color: white
+transform: scale(1.05,1);
+}
+
+.sign-up link{
+  background: transparent
+  text-align:center;
+  font-size:16px;
+  margin-top:21px;
+  color:rgb(93, 45, 247);
+  font: weight 4px;
+}
+
+
+
+//
+.sign-in-box{
+    display:flex;
+    justify-content:left;
+    flex-direction:column;
+    width:600px;
+    height:480px;
+    padding:50px;
+}
+
+.sign-in-header{
+  text-align:left;
+  margin:30px 0 50px 0;
+}
+
+.sign-in-header header{
+  color: #690ee0;
+  font-size: 50px;
+  font-weight: 600px;
+}
+
+section{
+  display:flex;
+  align-items:center;
+  font-size:16px;
+  color:rgb(3, 3, 3);
+}
+
+#check{
+  margin-right: 12px;
+}
+
+a{
+  text-decoration-style:none;
+}
+
+a:hover{
+  text-decoration:none;
+}
+
+section a{
+  color:#bbb;
+}
+
+.input-submit{
+  position:center;
+}
+
+.submit-btn{
+  width:250px;
+  height: 30px;
+  background:rgb(10, 96, 76);
+  border:none;
+  border-radius: 12px;
+  cursor:pointer;
+  transition: .3s;
+}
+
+.input-submit{
+  position: center;
+  top:15%;
+  left: 20%;
+  color: red;
+  cursor: pointer;;
+}
+
+.submit-btn:hover{
+color: white
+transform: scale(1.05,1);
+}
+
+
+
+
+#users-page {
+  position: absolute; /* Ensures it's placed relative to the page */
+  top: 0;
+  left: 0;
+  padding: 20px; /* Optional: adds some spacing inside the container */
+  background-color: #f9f9f9; /* Light background color */
+  border: 1px solid #ccc; /* Optional: adds a border */
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1); /* Optional: soft shadow for depth */
+  z-index: 1000; /* Ensure it's above other elements if needed */
+}
+
+.user-container {
+  max-width: 300px; /* Optional: control width */
+}
+
+.user-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+
+
+
+
+
+
+
+#user-page {
+    position: relative;
+    height: 100%;
+}
+
+.user-container {
+    background: #ffffff;
+    box-shadow: 0 1px 11px rgba(0, 0, 0, 0.1);
+    border-radius: 10px 0 0 10px; /* Rounded left edge only */
+    width: 60vw; /* Default width of 60% of screen */
+    height: 100vh; /* Full height */
+    position: absolute;
+    left: 0; /* Pushed to the left */
+    top: 0;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    resize: horizontal; /* Enables horizontal resizing */
+    overflow: auto; /* Allows scrolling when resized */
+    min-width: 25vw; /* Minimum width for the container */
+    max-width: 25vw; /* Prevents the container from getting wider than the screen */
+}
+
+
+
+
+
+
+
+
+@media screen and (max-width: 600px) {
+    .user-container {
+        padding: 20px;
+        width: 95%;
+        height: 95%;
+        border-radius: 8px;
+    }
+}
+
+
+#user-page ul {
+    list-style-type: none;
+    background: linear-gradient(to bottom, #f9f9f9, #eef7ff);
+    margin: 0;
+    overflow-y: auto;
+    padding: 10px 15px;
+    flex-grow: 1;
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+    height: calc(100vh - 120px); /* Adjust height if needed */
+}
+
+
+#user-page #messageForm {
+    padding: 0px;
+}
+
+#user-page ul li {
+    line-height: 1.5rem;
+    padding: 10px 20px;
+    margin: 0;
+    border-bottom: 1px solid #f4f4f4;
+}
+
+#user-page ul li p {
+    margin: 0;
+}
+
+#user-page .event-message {
+    width: 100%;
+    text-align: center;
+    clear: both;
+}
+
+#user-page .event-message p {
+    color: #777;
+    font-size: 14px;
+    word-wrap: break-word;
+}
+
+#user-page .user-message {
+    padding-left: 68px;
+    position: relative;
+}
+
+#user-page .user-message i {
+    position: absolute;
+    width: 42px;
+    height: 42px;
+    overflow: hidden;
+    left: 10px;
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 18px;
+    line-height: 42px;
+    color: #fff;
+    text-align: center;
+    border-radius: 50%;
+    font-style: normal;
+    text-transform: uppercase;
+}
+
+#user-page .chat-message span {
+    color: #333;
+    font-weight: 600;
+}
+
+#user-page .chat-message p {
+    color: #43464b;
+}
+
+#messageForm .input-group input {
+    float: left;
+    width: calc(100% - 85px);
+}
+
+#messageForm .input-group button {
+    float: left;
+    width: 80px;
+    height: 38px;
+    margin-left: 5px;
+}
+
+.user-header {
+    text-align: center;
+    padding: 15px;
+    border-bottom: 1px solid #ececec;
+}
+
+.user-header h2 {
+    margin: 0;
+    font-weight: 500;
+}
+
+.connecting {
+    padding-top: 5px;
+    text-align: center;
+    color: #777;
+    position: absolute;
+    top: 65px;
+    width: 100%;
+}
+
+
+@media screen and (max-width: 730px) {
+
+    .user-container {
+        margin-left: 10px;
+        margin-right: 10px;
+        margin-top: 10px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .user-container {
+        height: 100%;
+    }
+
+    #user-page ul {
+        height: calc(100% - 120px);
+    }
+
+    #messageForm .input-group button {
+        width: 65px;
+    }
+
+    #messageForm .input-group input {
+        width: calc(100% - 70px);
+    }
+
+    .user-header {
+        padding: 10px;
+    }
+
+    .connecting {
+        top: 60px;
+    }
+
+    .user-header h2 {
+        font-size: 1.1em;
+    }
+}
+
+
+
+#friend-page {
+    width: 10vw;
+    height: 100%;
+}
+
+/* Make the container flexible */
+.friend-container {
+    background: #ffffff;
+    box-shadow: 0 1px 11px rgba(0, 0, 0, 0.1);
+    border-radius: 10px 0 0 10px; /* Rounded left edge only */
+    width: 10vw; /* Default width of 40% of screen */
+    height: 100vh; /* Full height */
+    position: absolute;
+    left: 0; /* Pushed to the right */
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    resize: horizontal; /* Enables horizontal resizing */
+    overflow: auto; /* Allows scrolling when resized */
+    min-width: 10vw; /* Minimum width for the container */
+    max-width: 10vw; /* Prevents the container from getting wider than the screen */
+}
+
+#friend-page ul {
+    list-style-type: none;
+    background: linear-gradient(to bottom, #f9f9f9, #eef7ff);
+    margin: 0;
+    overflow-y: auto;
+    padding: 10px 15px;
+    flex-grow: 1;
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+    height: calc(100vh - 120px); /* Adjust height if needed */
+}
+
+/* Unordered list that holds friends */
+#friendArea {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Each friend item */
+#friendArea li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #6db33f;
+    color: #fff;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    font-size: 16px;
+}
+#friendArea li i {
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    background-color: #ccc;
+    color: #fff;
+    border-radius: 50%;
+    font-style: normal;
+    display: inline-block;
+    font-size: 18px;
+    text-transform: uppercase;
+}
