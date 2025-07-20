@@ -6,12 +6,12 @@ var userPage = document.querySelector('#user-page');
 var usernameForm = document.querySelector('#usernameForm');
 var messageForm = document.querySelector('#messageForm');
 var messageInput = document.querySelector('#message');
-var friendPage = document.getElementById('friend-page');
-var messageArea = document.querySelector('#messageArea');
 var friendArea = document.querySelector('#friendArea');
+var messageArea = document.getElementById('messageArea');
+var friendPage = document.getElementById('friend-page');
 var connectingElement = document.querySelector('.connecting');
 var signInPage = document.querySelector('#sign-in-page');
-
+var count = 0;
 var stompClient = null;
 var username = null;
 var password = null;
@@ -22,6 +22,22 @@ var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
     '#ffc107', '#ff85af', '#FF9800', '#39bbb0'
 ];
+
+
+friendArea.addEventListener('click', e => {
+  const li = e.target.closest('li.friend-message');
+  if (!li) return;
+  while (messageArea.firstChild) {
+    messageArea.removeChild(messageArea.firstChild);
+  }
+  const user = li.querySelector('span')?.textContent.trim();
+  console.log('Delegated click on:', user);
+  li.classList.toggle('selected');
+  recipient = user
+  stompClient.subscribe('/user/' + username + '/queue/receive', onMessageReceived);
+//  sendOldMessages();
+});
+
 
 function connect(event) {
     event.preventDefault(); // Prevent form submission
@@ -69,23 +85,30 @@ function onConnected() {
 }
 //
 function createUser(message) {
-    var friendElement = document.createElement('li');
-    friendElement.classList.add('friend-message');
+  console.log('👉 createUser()', message);
+  try {
+    friendPage.classList.remove('hidden');
+    const li = document.createElement('li');
+    li.classList.add('friend-message');
 
-    var avatarElement = document.createElement('i');
-    var avatarText = document.createTextNode(message.sender[0].toUpperCase());
-    avatarElement.appendChild(avatarText);
-    avatarElement.style['background-color'] = getAvatarColor(message.sender);
-    friendElement.appendChild(avatarElement);
+    const av = document.createElement('i');
+//    av.textContent = message.sender.username;
+    av.style.backgroundColor = getAvatarColor(message.sender.username);
+    li.appendChild(av);
 
-    var usernameElement = document.createElement('span');
-    var usernameText = document.createTextNode(' ' + message.sender);
-    usernameElement.appendChild(usernameText);
-    friendElement.appendChild(usernameElement);
+    const name = document.createElement('span');
+    name.textContent = ' ' + message.sender.username;
+    li.appendChild(name);
 
-    friendArea.appendChild(friendElement);
+    friendArea.appendChild(li);
     friendArea.scrollTop = friendArea.scrollHeight;
+    console.log('✅ appended li', li);
+  } catch(err) {
+    console.error('❌ createUser() error:', err);
+  }
 }
+
+
 
 
 function onError(error) {
@@ -111,44 +134,52 @@ function sendMessage(event) {
         messageInput.value = ''; // Clear input after sending
     }
 }
-
 async function sendOldMessages() {
-    try {
-        const response = await fetch('/api/messages');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const messages = await response.json();
-        console.log('Messages:', messages);
+  try {
+    // 1) Get current users
+    const usersRes = await fetch('loginPage/api/users');
+    if (!usersRes.ok) throw new Error('Failed to fetch users');
+    const users = await usersRes.json();     // e.g. ['alice','bob','charlie']
+    console.log('Online users:', users);
 
-        for (const message of messages) {
-            var chatMessage = {
-                sender: message.sender,
-                content: message.content,
-                recipient: message.recipient,
-                type: 'CHAT'
-            };
-
-            if (message.sender === username || message.recipient === username) {
-                let messageSent = false;
-
-                while (!messageSent) {
-                    try {
-                        stompClient.send("/app/chat.sendOldMessage/" + username, {}, JSON.stringify(chatMessage));
-                        messageSent = true;
-                    } catch (error) {
-                        console.error('Error sending message:', error);
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                    }
-                }
-
-                await new Promise(resolve => setTimeout(resolve, 10));
-            }
-        }
-    } catch (error) {
-        console.error('Error fetching messages:', error);
+    if (count ==0){
+      count = count +1;
+    // Populate friends list
+      users.forEach(u => createUser({ sender: u }));
     }
+
+    // 2) Get historical chat messages
+    const msgsRes = await fetch('/api/messages');
+    if (!msgsRes.ok) throw new Error('Failed to fetch messages');
+    const messages = await msgsRes.json();   // e.g. [{sender,recipient,content,timestamp},…]
+    console.log('Historical messages:', messages);
+
+    // Re-send each via STOMP so onMessageReceived() will render them
+    for (const m of messages) {
+      // only re-play messages involving this user
+      if (m.sender === username || m.recipient === username) {
+        const chatMessage = {
+          sender:    m.sender,
+          recipient: m.recipient,
+          content:   m.content,
+          type:      'CHAT'
+        };
+        // we throttle to avoid hammering the broker
+        stompClient.send(
+          `/app/chat.sendOldMessage/${username}`,
+          {},
+          JSON.stringify(chatMessage)
+        );
+        // small pause in case broker wants pacing
+        await new Promise(r => setTimeout(r, 20));
+      }
+    }
+  }
+  catch (err) {
+    console.error('sendOldMessages error:', err);
+  }
 }
+
 
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
@@ -157,7 +188,6 @@ function onMessageReceived(payload) {
     if (message.type === 'JOIN') {
         messageElement.classList.add('event-message');
         message.content = message.sender + ' joined!';
-        createUser(message); // <- Show in friend list
     } else if (message.type === 'LEAVE') {
         messageElement.classList.add('event-message');
         message.content = message.sender + ' left!';
