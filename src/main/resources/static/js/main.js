@@ -34,9 +34,12 @@ friendArea.addEventListener('click', e => {
   console.log('Delegated click on:', user);
   li.classList.toggle('selected');
   recipient = user
-  stompClient.subscribe('/user/' + username + '/queue/receive', onMessageReceived);
-//  sendOldMessages();
+  sendOldMessages();
+
 });
+
+
+
 
 
 function connect(event) {
@@ -72,7 +75,6 @@ function connect(event) {
 
 function onConnected() {
     stompClient.subscribe('/user/' + username + '/queue/receive', onMessageReceived);
-
     sendOldMessages();
     stompClient.send("/app/chat.addUser", {}, JSON.stringify({
         sender: username,
@@ -87,6 +89,9 @@ function onConnected() {
 function createUser(message) {
   console.log('👉 createUser()', message);
   try {
+     if(message.sender.username == username){
+     return;
+    }
     friendPage.classList.remove('hidden');
     const li = document.createElement('li');
     li.classList.add('friend-message');
@@ -147,32 +152,29 @@ async function sendOldMessages() {
     // Populate friends list
       users.forEach(u => createUser({ sender: u }));
     }
-
+    var sender_recipient = username+recipient;
+    console.log('USERRRRRRRRRRRRR', sender_recipient)
     // 2) Get historical chat messages
-    const msgsRes = await fetch('/api/messages');
+    const msgsRes = await fetch("/api/messages/" + sender_recipient);
     if (!msgsRes.ok) throw new Error('Failed to fetch messages');
     const messages = await msgsRes.json();   // e.g. [{sender,recipient,content,timestamp},…]
     console.log('Historical messages:', messages);
-
-    // Re-send each via STOMP so onMessageReceived() will render them
+//    const count = 0;
     for (const m of messages) {
-      // only re-play messages involving this user
-      if (m.sender === username || m.recipient === username) {
-        const chatMessage = {
-          sender:    m.sender,
-          recipient: m.recipient,
-          content:   m.content,
-          type:      'CHAT'
-        };
-        // we throttle to avoid hammering the broker
-        stompClient.send(
-          `/app/chat.sendOldMessage/${username}`,
-          {},
-          JSON.stringify(chatMessage)
-        );
-        // small pause in case broker wants pacing
-        await new Promise(r => setTimeout(r, 20));
-      }
+//    count = count +1;
+//    console.log('COUNT', count);
+    const chatMessage = {
+      sender:    m.sender,
+      recipient: m.recipient,
+      content:   m.content,
+      type:      'CHAT'
+    };
+    stompClient.send(
+    `/app/chat.sendOldMessage/${username}`,
+    {},
+    JSON.stringify(chatMessage)
+    );
+    await new Promise(r => setTimeout(r, 20));
     }
   }
   catch (err) {

@@ -17,6 +17,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -68,6 +69,21 @@ public class ChatController {
     @GetMapping("/messages")
     public ArrayList<ChatMessage> getMessages() {
         return messages;
+    }
+
+    @GetMapping("/messages/{user}")
+    public ArrayList<ChatMessage> getMessagesFromUser(@PathVariable String user) {
+        ArrayList<ChatMessage> user_messages = new ArrayList<>();
+        for(int i =0; i<messages.size(); i++)
+        {
+           String sender_recipient = messages.get(i).getSender().toString()+ messages.get(i).getRecipient().toString();
+           String recipient_sender = messages.get(i).getRecipient().toString()+ messages.get(i).getSender().toString();
+            if(sender_recipient.equals(user)|| recipient_sender.equals(user))
+            {
+                user_messages.add(messages.get(i));
+            }
+        }
+        return user_messages;
     }
 
     @MessageMapping("/chat.addUser")
