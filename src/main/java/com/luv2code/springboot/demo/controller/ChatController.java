@@ -3,6 +3,7 @@ package com.luv2code.springboot.demo.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luv2code.springboot.demo.chat.ChatMessage;
+import com.luv2code.springboot.demo.config.WebSocketListener;
 import com.luv2code.springboot.demo.db.DBManager;
 import com.luv2code.springboot.demo.file.FileManager;
 import com.luv2code.springboot.demo.mail.EmailSender;
@@ -103,6 +104,10 @@ public class ChatController {
             } else if (UserRestController.users.get(i).getEmail().equals(chatMessage.getSenderEmail())) {
                 check = true;
             }
+            if(UserRestController.users.get(i).getUsername().equals(chatMessage.getSender())&&!UserRestController.users.get(i).getEmail().equals(chatMessage.getSenderEmail()))
+            {
+                DBManager.updateUserEmail(UserRestController.users.get(i).getUsername(), chatMessage.getSenderEmail());
+            }
         }
         if (check == false) {
             DBManager.createUser(chatMessage.getSender(), chatMessage.getSenderPassword(), chatMessage.getSenderEmail());
@@ -110,24 +115,8 @@ public class ChatController {
             return chatMessage;
         }
 
-//
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            JsonNode root = objectMapper.readTree(response);
-//
-//            String result = root.path("result").asText();
-//            boolean isValid = root.path("is_valid").asBoolean();
-//
-//            if (!isValid) {
-//                System.out.println("The email address " + chatMessage.getSenderEmail() + " is invalid or doesn't exist.");
-//            } else {
-//                System.out.println("The email address " + chatMessage.getSenderEmail() + " is valid.");
-//            }
-//
-//        } catch (Exception e) {
-//            System.out.println("Error processing the response: " + e.getMessage());
-//        }
-//
+        WebSocketListener.onlineUsers.add(chatMessage.getSender());
+
         emailSender.sendMessageWithAttachment(chatMessage.getSenderEmail(), "Hi "+ chatMessage.getSender() +". You have successfully created an account.", "Hi, We are Bloop.", filePath, fileManager.createPDF(chatMessage.getSender(), chatMessage.getSenderEmail()) ,  chatMessage.getSender());
         return null;
     }

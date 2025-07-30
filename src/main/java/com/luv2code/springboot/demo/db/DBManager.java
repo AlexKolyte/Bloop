@@ -50,7 +50,44 @@ public class DBManager {
         return -1;
     }
 
+    public static void updateUserEmail(String username, String newEmail) {
+        String updateEmailSQL =
+                "UPDATE user_directory.`user` " +
+                        "SET email = ? " +
+                        "WHERE username = ?;";
 
+        try (Connection connection = DriverManager.getConnection(
+                DATABASE_URL, DBManager.username, DBManager.password)) {
+
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement stmt = connection.prepareStatement(updateEmailSQL)) {
+                // 1) bind the new email
+                stmt.setString(1, newEmail);
+                // 2) bind the username of the record to update
+                stmt.setString(2, username);
+
+                int affectedRows = stmt.executeUpdate();
+                if (affectedRows == 0) {
+                    throw new SQLException(
+                            "Updating user email failed, no rows affected.");
+                }
+
+                // 3) commit if successful
+                connection.commit();
+                System.out.printf(
+                        "Updated email for user '%s' to '%s'%n", username, newEmail);
+
+            } catch (SQLException e) {
+                // rollback on error
+                connection.rollback();
+                e.printStackTrace();
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public static int saveLastUser()
