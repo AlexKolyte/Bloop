@@ -16,6 +16,7 @@ var stompClient = null;
 var username = null;
 var password = null;
 var email = null;
+var onlineUsers = null;
 var recipient = null;
 
 var colors = [
@@ -48,26 +49,25 @@ function connect(event) {
     username = document.querySelector('#name').value.trim();
     password = document.querySelector('#password').value.trim();
     email = document.querySelector('#email').value.trim();
-    recipient = document.querySelector('#recipient').value.trim();
-
-    if (username && password && email && recipient) {
-        fetch('loginPage/api/exists/' + recipient)
-            .then(res => res.json())
-            .then(exists => {
-                if (exists) {
+//    recipient = document.querySelector('#recipient').value.trim();
+    if (username && password && email) {
+//        fetch('loginPage/api/exists/' + recipient)
+//            .then(res => res.json())
+//            .then(exists => {
+//                if (exists) {
                     usernamePage.classList.add('hidden');
                     chatPage.classList.remove('hidden');
                     friendPage.classList.remove('hidden');
                     var socket = new SockJS('/ws');
                     stompClient = Stomp.over(socket);
                     stompClient.connect({}, onConnected, onError);
-                } else {
-                    console.log("User does not exist");
-                }
-            })
-            .catch(error => {
-                console.error('Error checking user existence:', error);
-            });
+//                } else {
+//                    console.log("User does not exist");
+//                }
+////            })
+//            .catch(error => {
+//                console.error('Error checking user existence:', error);
+//            });
     } else {
         console.log("Please fill in all fields.");
     }
@@ -83,9 +83,41 @@ function onConnected() {
         recipient: recipient,
         type: 'JOIN'
     }));
+
     connectingElement.classList.add('hidden');
 }
+
 //
+//async function fetchOnlineUsers() {
+//  try {
+//    const response = await fetch('/loginPage/api/onlineUsers', {
+//      method: 'GET',
+//      headers: {
+//        'Accept': 'application/json'
+//      }
+//    });
+//
+//    if (!response.ok) {
+//      // Handle HTTP errors
+//      throw new Error(`Network response was not ok (${response.status} ${response.statusText})`);
+//    }
+//
+//    // Parse and return JSON array of usernames
+//    const onlineUsers = await response.json();
+//
+//    if (!Array.isArray(onlineUsers)) {
+//      throw new Error('Invalid data format: expected an array of strings');
+//    }
+//
+//    return onlineUsers;
+//  } catch (error) {
+//    console.error('Failed to fetch online users:', error);
+//    // Depending on your app, you might rethrow, return a default value, or update the UI
+//    throw error;
+//  }
+//}
+
+
 function createUser(message) {
   console.log('👉 createUser()', message);
   try {
@@ -135,22 +167,35 @@ function sendMessage(event) {
 
         // Send the message to the recipient
         stompClient.send("/app/chat.sendPrivateMessage/" + recipient, {}, JSON.stringify(chatMessage));
-        stompClient.send("/app/chat.sendPrivateMessage/" + username, {}, JSON.stringify(chatMessage))
+        stompClient.send("/app/chat.sendPrivateMessage/" + username, {}, JSON.stringify(chatMessage));
         messageInput.value = ''; // Clear input after sending
     }
 }
 async function sendOldMessages() {
   try {
+
+  const response = await fetch('/loginPage/api/onlineUsers', {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Parse the JSON array into a JS Array<string>
+     const onlineUsers = await response.json();
+     console.log('Online users:', onlineUsers);
     // 1) Get current users
-    const usersRes = await fetch('loginPage/api/users');
-    if (!usersRes.ok) throw new Error('Failed to fetch users');
-    const users = await usersRes.json();     // e.g. ['alice','bob','charlie']
-    console.log('Online users:', users);
+//   const usersRes = await fetch('loginPage/api/users');
+//    if (!usersRes.ok) throw new Error('Failed to fetch users');
+//    const users = await usersRes.json();
+
 
     if (count ==0){
       count = count +1;
     // Populate friends list
-      users.forEach(u => createUser({ sender: u }));
+      onlineUsers.forEach(u => createUser({ sender: u }));
     }
     var sender_recipient = username+recipient;
     console.log('USERRRRRRRRRRRRR', sender_recipient)
@@ -182,18 +227,16 @@ async function sendOldMessages() {
   }
 }
 
-
 function onMessageReceived(payload) {
     var message = JSON.parse(payload.body);
     var messageElement = document.createElement('li');
 
-    if (message.type === 'JOIN') {
+     if (message.content === 'Leave') {
         messageElement.classList.add('event-message');
-        message.content = message.sender + ' joined!';
-    } else if (message.type === 'LEAVE') {
-        messageElement.classList.add('event-message');
-        message.content = message.sender + ' left!';
-    } else {
+        messageElement.textContent = "${message.sender} has left!";
+        console.log('Online users: ',onlineUsers);
+      }
+     else {
         messageElement.classList.add('chat-message');
 
         var avatarElement = document.createElement('i');
@@ -216,6 +259,34 @@ function onMessageReceived(payload) {
     messageArea.appendChild(messageElement);
     messageArea.scrollTop = messageArea.scrollHeight;
 }
+
+
+//function newUserOnline(message)
+//{
+//   try {
+//     if(message.sender.username == username){
+//     return;
+//    }
+//    friendPage.classList.remove('hidden');
+//    const li = document.createElement('li');
+//    li.classList.add('friend-message');
+//
+//    const av = document.createElement('i');
+////    av.textContent = message.sender.username;
+//    av.style.backgroundColor = getAvatarColor(message.sender.username);
+//    li.appendChild(av);
+//
+//    const name = document.createElement('span');
+//    name.textContent = ' ' + message.sender.username;
+//    li.appendChild(name);
+//
+//    friendArea.appendChild(li);
+//    friendArea.scrollTop = friendArea.scrollHeight;
+//    console.log('✅ appended li', li);
+//    } catch(err) {
+//      console.error('❌ createUser() error:', err);
+//    }
+//}
 
 
 

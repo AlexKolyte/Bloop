@@ -14,7 +14,6 @@ public class ChatMessage {
     private String senderEmail;
     private String senderPassword;
     private String sender;
-    private MessageType messageType;
 
     public ChatMessage(String content, String sender, String recipient) {
         this.content =content;
@@ -48,14 +47,6 @@ public class ChatMessage {
         this.sender = sender;
     }
 
-    public MessageType getMessageType() {
-        return messageType;
-    }
-
-    public void setMessageType(MessageType messageType) {
-        this.messageType = messageType;
-    }
-
     public String getSenderEmail() {
         return senderEmail;
     }
@@ -71,4 +62,5 @@ public class ChatMessage {
     public void setRecipient(String recipient) {
         this.recipient = recipient;
     }
+
 }
