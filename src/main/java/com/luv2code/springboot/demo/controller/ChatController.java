@@ -90,6 +90,8 @@ public class ChatController {
     @MessageMapping("/chat.addUser")
     @SendTo("/topic/public")
     public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) throws MessagingException, URISyntaxException {
+
+        WebSocketListener.onlineUsers.add(chatMessage.getSender());
 //        String response = emailVerification.verifyEmail(chatMessage.getSenderEmail());
         String filePath = "/Users/alex/Downloads/Bloop/src/main/resources/static/image/icon.png";
         boolean check = false;
@@ -114,8 +116,6 @@ public class ChatController {
             DBManager.saveLastUser();
             return chatMessage;
         }
-
-        WebSocketListener.onlineUsers.add(chatMessage.getSender());
 
         emailSender.sendMessageWithAttachment(chatMessage.getSenderEmail(), "Hi "+ chatMessage.getSender() +". You have successfully created an account.", "Hi, We are Bloop.", filePath, fileManager.createPDF(chatMessage.getSender(), chatMessage.getSenderEmail()) ,  chatMessage.getSender());
         return null;

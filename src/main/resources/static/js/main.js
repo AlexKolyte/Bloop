@@ -76,6 +76,10 @@ function connect(event) {
 function onConnected() {
     stompClient.subscribe('/user/' + username + '/queue/receive', onMessageReceived);
     sendOldMessages();
+    while (friendArea.firstChild) {
+        friendArea.removeChild(friendArea.firstChild);
+      }
+
     stompClient.send("/app/chat.addUser", {}, JSON.stringify({
         sender: username,
         senderPassword: password,
@@ -124,7 +128,7 @@ function createUser(message) {
      if(message.sender.username == username){
      return;
     }
-    friendPage.classList.remove('hidden');
+//    friendPage.classList.remove('hidden');
     const li = document.createElement('li');
     li.classList.add('friend-message');
 
@@ -171,6 +175,37 @@ function sendMessage(event) {
         messageInput.value = ''; // Clear input after sending
     }
 }
+
+
+async function updateFriendArea()
+{
+  while (friendArea.firstChild) {
+    friendArea.removeChild(friendArea.firstChild);
+  }
+
+  const response = await fetch('/loginPage/api/onlineUsers', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        // Parse the JSON array into a JS Array<string>
+       const onlineUsers = await response.json();
+       console.log('Online users:', onlineUsers);
+      // 1) Get current users
+  //   const usersRes = await fetch('loginPage/api/users');
+  //    if (!usersRes.ok) throw new Error('Failed to fetch users');
+  //    const users = await usersRes.json();
+       onlineUsers.forEach(u => createUser({ sender: u }));
+}
+
+updateFriendArea();
+
+const timer = setInterval(updateFriendArea, 10000);
+
 async function sendOldMessages() {
   try {
 
@@ -190,7 +225,7 @@ async function sendOldMessages() {
 //   const usersRes = await fetch('loginPage/api/users');
 //    if (!usersRes.ok) throw new Error('Failed to fetch users');
 //    const users = await usersRes.json();
-
+friendPage.classList.remove('hidden');
 
     if (count ==0){
       count = count +1;

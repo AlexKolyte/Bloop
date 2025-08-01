@@ -33,6 +33,7 @@ public class UserRestController {
     @GetMapping("/onlineUsers")
     public HashSet<User> getOnlineUsers()
     {
+        onlineUsers.clear();
         for (int i= 0; i<users.size(); i++)
         {
             for (int j = 0; j<WebSocketListener.onlineUsers.size(); j++){

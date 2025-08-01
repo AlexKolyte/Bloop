@@ -21,7 +21,6 @@ public class WebSocketListener {
 
     @Autowired
     private SimpMessagingTemplate simpMessagingTemplate;
-    @Autowired
     public static ArrayList<String> onlineUsers = new ArrayList<>();
 
     @EventListener
