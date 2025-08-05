@@ -43,24 +43,45 @@ friendArea.addEventListener('click', e => {
 
 
 
-function connect(event) {
+async function connect(event) {
     event.preventDefault(); // Prevent form submission
 
     username = document.querySelector('#name').value.trim();
     password = document.querySelector('#password').value.trim();
     email = document.querySelector('#email').value.trim();
-//    recipient = document.querySelector('#recipient').value.trim();
-    if (username && password && email) {
-//        fetch('loginPage/api/exists/' + recipient)
-//            .then(res => res.json())
-//            .then(exists => {
-//                if (exists) {
-                    usernamePage.classList.add('hidden');
-                    chatPage.classList.remove('hidden');
-                    friendPage.classList.remove('hidden');
-                    var socket = new SockJS('/ws');
-                    stompClient = Stomp.over(socket);
-                    stompClient.connect({}, onConnected, onError);
+
+    const response = await fetch('/loginPage/api/onlineUsers', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      // Handle HTTP errors
+      throw new Error(`Network response was not ok (${response.status} ${response.statusText})`);
+    }
+
+    // Parse and return JSON array of usernames
+    const onlineUsers = await response.json();
+
+    const isOnline = onlineUsers.some(u => u.username === username);
+
+
+   console.log({
+       username,
+       password,
+       email,
+       isOnline
+     });
+
+   if (username && password && email && !isOnline) {
+       usernamePage.classList.add('hidden');
+       chatPage.classList.remove('hidden');
+       friendPage.classList.remove('hidden');
+       var socket = new SockJS('/ws');
+       stompClient = Stomp.over(socket);
+       stompClient.connect({}, onConnected, onError);
 //                } else {
 //                    console.log("User does not exist");
 //                }
