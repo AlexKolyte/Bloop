@@ -17,10 +17,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -73,7 +70,7 @@ public class ChatController {
     }
 
     @GetMapping("/messages/{user}")
-    public ArrayList<ChatMessage> getMessagesFromUser(@PathVariable String user) {
+    public synchronized ArrayList<ChatMessage> getMessagesFromUser(@PathVariable String user) {
         ArrayList<ChatMessage> user_messages = new ArrayList<>();
         for(int i =0; i<messages.size(); i++)
         {
@@ -89,10 +86,10 @@ public class ChatController {
 
     @MessageMapping("/chat.addUser")
     @SendTo("/topic/public")
-    public ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) throws MessagingException, URISyntaxException {
+    public synchronized ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) throws MessagingException, URISyntaxException {
+
 
         WebSocketListener.onlineUsers.add(chatMessage.getSender());
-//        String response = emailVerification.verifyEmail(chatMessage.getSenderEmail());
         String filePath = "/Users/alex/Downloads/Bloop/src/main/resources/static/image/icon.png";
         boolean check = false;
 
@@ -114,10 +111,11 @@ public class ChatController {
         if (check == false) {
             DBManager.createUser(chatMessage.getSender(), chatMessage.getSenderPassword(), chatMessage.getSenderEmail());
             DBManager.saveLastUser();
+            DBManager.saveLastCoordinate();
+            emailSender.sendMessageWithAttachment(chatMessage.getSenderEmail(), "Hi "+ chatMessage.getSender() +". You have successfully created an account.", "Hi, We are Bloop.", filePath, fileManager.createPDF(chatMessage.getSender(), chatMessage.getSenderEmail()) ,  chatMessage.getSender());
             return chatMessage;
         }
 
-        emailSender.sendMessageWithAttachment(chatMessage.getSenderEmail(), "Hi "+ chatMessage.getSender() +". You have successfully created an account.", "Hi, We are Bloop.", filePath, fileManager.createPDF(chatMessage.getSender(), chatMessage.getSenderEmail()) ,  chatMessage.getSender());
         return null;
     }
 }

@@ -131,7 +131,7 @@ public class EmailService implements EmailSender, EmailVerification{
         UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
                 .scheme("https")
                 .host("api.emaillistverify.com")
-                .path("/api/verifyEmail") // Updated path
+                .path("/api/verifyEmail")
                 .queryParam("email", email)
                 .queryParam("apikey", apiKey);
 

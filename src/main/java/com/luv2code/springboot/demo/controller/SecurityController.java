@@ -10,4 +10,15 @@ public class SecurityController {
     {
         return "index";
     }
+    @GetMapping("/profile")
+    public String profile()
+    {
+        return "profile";
+    }
+
+    @GetMapping("/settings")
+    public String settings()
+    {
+        return "profile";
+    }
 }

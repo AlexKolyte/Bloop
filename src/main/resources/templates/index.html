@@ -1,140 +1,150 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-	<title>Bloop</title>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<meta name="google-signin-client_id" content="749942340361-9odargrft9la9k3d2von9qeebijq4vcn.apps.googleusercontent.com">
 	<link rel="stylesheet" href="/css/style.css">
+
+	<link
+			href="https://cdn.jsdelivr.net/npm/boxicons@2.0.5/css/boxicons.min.css"
+			rel="stylesheet" />
+	<link
+			href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+			rel="stylesheet"
+	>
+
+	<link
+			rel="stylesheet"
+			href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+	/>
+	<!-- Geocoder plugin CSS -->
+	<link
+			rel="stylesheet"
+			href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"
+	/>
+<!--	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"-->
+<!--		  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="-->
+<!--		  crossorigin=""/>-->
+<!--	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"-->
+<!--			integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="-->
+<!--			crossorigin=""></script>-->
+
+<!--	<link-->
+<!--			rel="stylesheet"-->
+<!--			href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"-->
+<!--			integrity="sha512-XQoYMqMTK8LvdlXYgGOTbKdn1NVHjEHDybFfWvSpj5n23uJ0yPka1któS9GyU1gKoprOL46r2Sev9gD1sWpQ=="-->
+<!--			crossorigin=""-->
+<!--	/>-->
+<!--	<script-->
+<!--			src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"-->
+<!--			integrity="sha512-gZwIG9x3wUXg6Ev8433tZkK18jXtaHZE24hCU/gr5kYczduGIhxVZhAK/QX7azQX/byF1MSZgqDmFQ0NE5wWlA=="-->
+<!--			crossorigin=""-->
+<!--	></script>-->
+
 </head>
+
 <body>
-<noscript>
-	<h2>Sorry! Your browser doesn't support Javascript</h2>
-</noscript>
-<!--<div class="login-box">-->
-<!--	<div class="login-header">-->
-<!--		<header>Login</header>-->
-<!--	</div>-->
+<div class="l-form" id="username-page">
+	<div class="shape1"></div>
+	<div class="shape2"></div>
 
-<!--	<div class="input-box">-->
-<!--		<input type="text" class="input-field" placeholder="Email" autocomplete="off" required>-->
-<!--	</div>-->
-<!--	<div class="input-box">-->
-<!--		<input type="password" class="input-field" placeholder="password" autocomplete="off" required>-->
-<!--	</div>-->
-<!--	<div class="forgot">-->
-<!--		<section>-->
-<!--			<input type="checkbox" id="check">-->
-<!--			<label for="check">Remember me</label>-->
-<!--		</section>-->
-<!--		<section>-->
-<!--			<a href="#">Forgot Password</a>-->
-<!--		</section>-->
-<!--	</div>-->
-<!--	<div class="input-submit">-->
-<!--		<button class="submit-btn" id="submit"></button>-->
-<!--		<label for="submit">Sign In</label>-->
-<!--	</div>-->
-<!--	<div class="sign-up-link">-->
-<!--		<p>Dont have an Account? <a href="#">Sign In</a>/p>-->
-<!--	</div>-->
-<!--</div>-->
+	<div class="form">
+		<img
+				src="/image/authentication.svg"
+				alt="auth"
+				class="form__img" />
 
-<div id="username-page">
-	<div class="username-page-container">
-		<h1 class="title"></h1>
-		<form id="usernameForm" name="usernameForm" th:action="@{/authenticateTheUser}" method="post">
-<!--			<div class="form-group">-->
-<!--				<input type="text" id="name" placeholder="Username" autocomplete="off" class="form-control" />-->
-<!--				<input type="text" id="password" placeholder="Password" autocomplete="off" class="form-control"/>-->
-<!--				<input type="text" id="email" placeholder="Email" autocomplete="off" class="form-control"/>-->
-<!--			</div>-->
-<!--			<div class="form-group">-->
-<!--				<button type="submit" class="accent username-submit">Start Chatting</button>-->
-<!--			</div>-->
-			<div class="login-header">
-				<header>Login</header>
+		<form
+				id="usernameForm"
+				th:action="@{/authenticateTheUser}"
+				method="post"
+				class="form__content"
+		>
+			<input
+					type="hidden"
+					th:name="${_csrf.parameterName}"
+					th:value="${_csrf.token}" />
+
+			<h1 class="form__title">Welcome</h1>
+
+			<div class="form__div form__div-one">
+				<div class="form__icon"><i class='bx bx-user-circle'></i></div>
+				<div class="form__div-input">
+					<label for="name" class="form__label">Username</label>
+					<input
+							type="text"
+							id="name"
+							name="username"
+							class="form__input"
+							autocomplete="off"
+							required />
+				</div>
 			</div>
 
-			<div class="input-box">
-				<input type="text" id = "name" name="username" class="input-field" placeholder="Username" autocomplete="off" required>
+			<div class="form__div">
+				<div class="form__icon"><i class='bx bx-envelope'></i></div>
+				<div class="form__div-input">
+					<label for="email" class="form__label">Email</label>
+					<input
+							type="text"
+							id="email"
+							name="email"
+							class="form__input"
+							autocomplete="off"
+							required />
+				</div>
 			</div>
 
-			<div class="input-box">
-				<input type="text" id="email" class="input-field" placeholder="Email" autocomplete="off" required>
+			<div class="form__div">
+				<div class="form__icon"><i class='bx bx-lock'></i></div>
+				<div class="form__div-input">
+					<label for="password" class="form__label">Password</label>
+					<input
+							type="password"
+							id="password"
+							name="password"
+							class="form__input"
+							autocomplete="off"
+							required />
+				</div>
 			</div>
 
-			<div class="input-box">
-				<input type="password" id="password" name="password" class="input-field" placeholder="password" autocomplete="off" required>
-			</div>
-<!--			<div class="input-box">-->
-<!--				<input type="text" id="recipient" name="recipient" class="input-field" placeholder="recipient" autocomplete="off" required>-->
-<!--			</div>-->
-			<div class="forgot">
-				<section>
-					<input type="checkbox" id="check">
-					<label for="check">Remember me</label>
-				</section>
-				<section>
-					<a href="#">Forgot Password</a>
-				</section>
-			</div>
-			<div class="input-submit">
-				<button type = "submit" class="submit-btn" id="submit">Sign In</button>
-<!--				<label for="submit">Sign In</label>-->
-			</div>
-			<div class="sign-up-link">
-				<p>Don't have an Account? <a onclick="validate()">Sign In</a>
-			</div>
-		</form>
-	</div>
-</div>
+			<a href="#" class="form__forgot">Forgot Password?</a>
+			<input type="submit" class="form__button" value="Login" />
+
+			<div class="form__social">
+				<span class="form__social-text">Or login with</span>
+				<a href="#" class="form__social-icon"><i class='bx bxl-facebook'></i></a>
 
 
-<div id="sign-in-page" class="hidden">
-	<div class="sign-in-page-container">
-		<h1 class="title"></h1>
-		<form id="signInForm" name="signInForm">
-			<!--			<div class="form-group">-->
-			<!--				<input type="text" id="name" placeholder="Username" autocomplete="off" class="form-control" />-->
-			<!--				<input type="text" id="password" placeholder="Password" autocomplete="off" class="form-control"/>-->
-			<!--				<input type="text" id="email" placeholder="Email" autocomplete="off" class="form-control"/>-->
-			<!--			</div>-->
-			<!--			<div class="form-group">-->
-			<!--				<button type="submit" class="accent username-submit">Start Chatting</button>-->
-			<!--			</div>-->
-			<div class="sign-in-header">
-				<header>Sign In</header>
-			</div>
+				<div class="g_id_signin form__social-icon"></div>
 
-			<div class="input-box">
-				<input type="text" id = "sign-in-name" class="input-field" placeholder="Username" autocomplete="off" required>
-			</div>
-
-			<div class="input-box">
-				<input type="text" id="sign-in-email" class="input-field" placeholder="Email" autocomplete="off" required>
-			</div>
-
-			<div class="input-box">
-				<input type="password" id="sign-in-password" class="input-field" placeholder="password" autocomplete="off" required>
-			</div>
-			<div class="input-submit">
-				<button type = "sign-in-submit" class="submit-btn" id="sign-in-submit">Sign In</button>
-				<!--				<label for="submit">Sign In</label>-->
+				<a href="#" class="form__social-icon"><i class='bx bxl-instagram'></i></a>
 			</div>
 		</form>
 	</div>
 </div>
-
-
 
 <div id="chat-page" class="hidden">
 	<div class="chat-container">
 		<div class="chat-header">
 			<h2>Bloop</h2>
 		</div>
+
 		<div class="connecting">
 			Connecting...
 		</div>
 		<ul id="messageArea">
+<!--			<div id="map" style="height:500px" class="hidden"></div>-->
+
+			<!-- Leaflet JS -->
+			<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+			<!-- Geocoder plugin JS -->
+			<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+			<!-- Your map-initialisation script -->
+<!--			<script src="main.js"></script>-->
 
 		</ul>
 		<form id="messageForm" name="messageForm">
@@ -148,6 +158,7 @@
 	</div>
 </div>
 
+
 <div id="users-page" class="hidden">
 	<div class="user-container">
 		<div class="user-header">
@@ -156,23 +167,6 @@
 	</div>
 </div>
 
-<!--<div id="user-page" class="hidden">-->
-<!--	<div class="user-container">-->
-<!--		<div class="user-header">-->
-<!--			<h2>Users</h2>-->
-<!--		</div>-->
-<!--		<ul id="userArea">-->
-<!--		</ul>-->
-<!--		<form id="userForm" name="userForm">-->
-<!--			<div class="form-group">-->
-<!--				<div class="input-group clearfix">-->
-<!--					<input type="text" id="user" placeholder="Search a user" autocomplete="off" class="form-control"/>-->
-<!--					<button type="submit" class="primary">Send</button>-->
-<!--				</div>-->
-<!--			</div>-->
-<!--		</form>-->
-<!--	</div>-->
-<!--</div>-->
 
 <div id="friend-page" class="hidden">
 	<div class="friend-container">
@@ -191,10 +185,81 @@
 		<div class="error-header">
 			<h2>User already exists! Try again and press Sign In</h2>
 		</div>
+	</div>
 </div>
+<!-- Profile icon, sits on top of everything else -->
+<!-- Profile icon trigger stays the same -->
+<a href="#!" id="profileIcon" class="profile-icon">
+	<img src="/image/settings.svg" alt="Profile" />
+</a>
+
+<!-- Sliding panel -->
+<div id="profilePanel" class="profile-panel">
+	<div class="input">
+		<button class="value">
+			<!-- YOUR original “Public profile” SVG from Uiverse -->
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+				<path d="m1.5 13v1a.5.5 0 0 0 .3379.4731 18.9718 18.9718 0 0 0 6.1621 1.0269 18.9629 18.9629 0 0 0 6.1621-1.0269.5.5 0 0 0 .3379-.4731v-1a6.5083 6.5083 0 0 0 -4.461-6.1676 3.5 3.5 0 1 0 -4.078 0 6.5083 6.5083 0 0 0 -4.461 6.1676zm4-9a2.5 2.5 0 1 1 2.5 2.5 2.5026 2.5026 0 0 1 -2.5-2.5zm2.5 3.5a5.5066 5.5066 0 0 1 5.5 5.5v.6392a18.08 18.08 0 0 1 -11 0v-.6392a5.5066 5.5066 0 0 1 5.5-5.5z" fill="#7D8590"/>
+			</svg>
+			Public profile
+		</button>
+
+		<button class="value">
+			<!-- YOUR “Notifications” SVG -->
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 25">
+				<path fill-rule="evenodd" fill="#7D8590" d="m11.9572 4.31201c-3.35401 0-6.00906 2.59741-6.00906 5.67742v3.29037c0 .1986-.05916.3927-.16992.5576l-1.62529 2.4193-.01077.0157c-.18701.2673-.16653.5113-.07001.6868.10031.1825.31959.3528.67282.3528h14.52603c.2546 0 .5013-.1515.6391-.3968.1315-.2343.1117-.4475-.0118-.6093-.0065-.0085-.0129-.0171-.0191-.0258l-1.7269-2.4194c-.121-.1695-.186-.3726-.186-.5809v-3.29037c0-1.54561-.6851-3.023-1.7072-4.00431-1.1617-1.01594-2.6545-1.67311-4.3019-1.67311zm-8.00906 5.67742c0-4.27483 3.64294-7.67742 8.00906-7.67742 2.2055 0 4.1606.88547 5.6378 2.18455.01.00877.0198.01774.0294.02691 1.408 1.34136 2.3419 3.34131 2.3419 5.46596v2.97007l1.5325 2.1471c.6775.8999.6054 1.9859.1552 2.7877-.4464.795-1.3171 1.4177-2.383 1.4177h-14.52603c-2.16218 0-3.55087-2.302-2.24739-4.1777l1.45056-2.1593zm4.05187 11.32257c0-.5523.44772-1 1-1h5.99999c.5523 0 1 .4477 1 1s-.4477 1-1 1h-5.99999c-.55228 0-1-.4477-1-1z"/>
+			</svg>
+			Notifications
+		</button>
+	</div>
+</div>
+<div id="pf-modal" class="pf-modal hidden">
+	<div class="pf-modal-content">
+		<form class="pf-form" id="pf-form">
+			<div class="pf-title">
+				Your Profile<br>
+				<span>Review your account details</span>
+			</div>
+
+			<div id="pf-username-display" class="pf-display"></div>
+			<div id="pf-password-display" class="pf-display"></div>
+
+			<!-- From Uiverse.io by csemszepp -->
+			<label for="file" class="custum-file-upload">
+				<div class="icon">
+					<svg viewBox="0 0 24 24" fill="" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM14 15.5C14 14.1193 15.1193 13 16.5 13C17.8807 13 19 14.1193 19 15.5V16V17H20C21.1046 17 22 17.8954 22 19C22 20.1046 21.1046 21 20 21H13C11.8954 21 11 20.1046 11 19C11 17.8954 11.8954 17 13 17H14V16V15.5ZM16.5 11C14.142 11 12.2076 12.8136 12.0156 15.122C10.2825 15.5606 9 17.1305 9 19C9 21.2091 10.7909 23 13 23H20C22.2091 23 24 21.2091 24 19C24 17.1305 22.7175 15.5606 20.9844 15.122C20.7924 12.8136 18.858 11 16.5 11Z" fill=""></path> </g></svg>
+				</div>
+				<div class="text">
+					<span>Click to upload image</span>
+				</div>
+				<input id="file" type="file">
+			</label>
+
+			<!-- Informational text -->
+			<p class="pf-info">
+				You can update your email on the login page.
+			</p>
+
+			<div class="pf-actions">
+				<button type="button" class="pf-button-action" id="pf-update-username">
+					Update Username
+				</button>
+				<button type="button" class="pf-button-action" id="pf-change-password">
+					Change Password
+				</button>
+				<button type="button" class="pf-button-confirm" id="pf-close">
+					Save
+				</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script src="/js/main.js"></script>
-</div>
 </body>
 </html>
