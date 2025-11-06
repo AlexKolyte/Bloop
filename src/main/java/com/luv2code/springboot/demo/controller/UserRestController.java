@@ -109,6 +109,19 @@ public class UserRestController {
         return users[userId];
     }
 
+    @GetMapping("/getUserId/{name}")
+    public int getUserByName(@PathVariable String name)
+    {
+        for(int i = 0; i<users.size(); i++)
+        {
+            if(users.get(i).getUsername().equals(name))
+            {
+                return i+1;
+            }
+        }
+        return -1;
+    }
+
 
     @Nullable
     @GetMapping("/updateUserAndCoordinates/{new_username}/{lat}/{lon}/{old_username}")

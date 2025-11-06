@@ -10,6 +10,9 @@ import com.luv2code.springboot.demo.mail.EmailSender;
 import com.luv2code.springboot.demo.mail.EmailVerification;
 import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
+import me.postaddict.instagram.scraper.Instagram;
+import me.postaddict.instagram.scraper.model.Account;
+import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -20,17 +23,20 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 @RequestMapping("/api")
 public class ChatController {
     @Autowired
     private SimpMessagingTemplate simpMessagingTemplate;
-    int count = 0;
+    AtomicInteger counter = new AtomicInteger();
+
     private final FileManager fileManager;
 
     public static ArrayList<ChatMessage> messages = new ArrayList<>();
@@ -47,10 +53,11 @@ public class ChatController {
 
     @MessageMapping("/chat.sendPrivateMessage/{recipient}")
     public void sendPrivateMessage(@DestinationVariable String recipient, @Payload ChatMessage message) {
-        count++;
-        if(count%2!=0) {
+        int c = counter.incrementAndGet();
+        if (c % 2 == 1) {
             DBManager.saveMessage(message);
         }
+
         simpMessagingTemplate.convertAndSendToUser(recipient, "/queue/receive", message);
     }
 
@@ -87,8 +94,6 @@ public class ChatController {
     @MessageMapping("/chat.addUser")
     @SendTo("/topic/public")
     public synchronized ChatMessage addUser(@Payload ChatMessage chatMessage, SimpMessageHeaderAccessor headerAccessor) throws MessagingException, URISyntaxException {
-
-
         WebSocketListener.onlineUsers.add(chatMessage.getSender());
         String filePath = "/Users/alex/Downloads/Bloop/src/main/resources/static/image/icon.png";
         boolean check = false;
@@ -98,6 +103,10 @@ public class ChatController {
         headerAccessor.getSessionAttributes().putIfAbsent("email", chatMessage.getSenderEmail());
 
         for (int i = 0; i < UserRestController.users.size(); i++) {
+            if(UserRestController.users.get(i).getEmail() == null)
+            {
+                continue;
+            }
             if (UserRestController.users.get(i).getUsername().equals(chatMessage.getSender())) {
                 check = true;
             } else if (UserRestController.users.get(i).getEmail().equals(chatMessage.getSenderEmail())) {

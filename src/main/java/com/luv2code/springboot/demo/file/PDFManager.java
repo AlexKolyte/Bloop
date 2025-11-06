@@ -65,21 +65,6 @@ public class PDFManager implements FileManager {
             cell = new PdfPCell(new Paragraph("Total Price", titleFont));
             table.addCell(cell);
 
-//            int itemNo = 1;
-//            for (ArrayList<String> item : cart.getData().entrySet()) {
-//                cell = new PdfPCell(new Paragraph(String.valueOf(itemNo), contentFont));
-//                table.addCell(cell);
-//                cell = new PdfPCell(new Paragraph(DBManager.getSmartphoneBrand(item.getKey().getBrandId()) + " " + item.getKey().getModel(), contentFont));
-//                table.addCell(cell);
-//                cell = new PdfPCell(new Paragraph(item.getValue().toString(), contentFont));
-//                table.addCell(cell);
-//                cell = new PdfPCell(new Paragraph(String.valueOf(item.getKey().getPrice()), contentFont));
-//                table.addCell(cell);
-//                cell = new PdfPCell(new Paragraph(String.valueOf(item.getKey().getPrice() * item.getValue()), contentFont));
-//                table.addCell(cell);
-//                itemNo++;
-//            }
-
             document.add(table);
 
 

@@ -14,14 +14,22 @@ public class ChatMessage {
     private String senderEmail;
     private String senderPassword;
     private String sender;
+    private int user_id;
 
-    public ChatMessage(String content, String sender, String recipient) {
+    public ChatMessage(String content, String sender, String recipient, int user_id) {
         this.content =content;
         this.sender = sender;
         this.recipient= recipient;
+        this.user_id = user_id;
     }
 
+    public int getUser_id() {
+        return user_id;
+    }
 
+    public void setUser_id(int user_id) {
+        this.user_id = user_id;
+    }
 
     public String getSenderPassword() {
         return senderPassword;

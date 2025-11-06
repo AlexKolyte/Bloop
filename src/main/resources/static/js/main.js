@@ -6,6 +6,7 @@ var usernameForm = document.querySelector('#usernameForm');
 var messageForm = document.querySelector('#messageForm');
 var messageInput = document.querySelector('#message');
 var friendArea = document.querySelector('#friendArea');
+var settings = document.querySelector('#profileIcon');
 var messageArea = document.getElementById('messageArea');
 var friendPage = document.getElementById('friend-page');
 var connectingElement = document.querySelector('.connecting');
@@ -85,6 +86,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+async function fillUserPositions() {
+  const url = "/loginPage/api/fillUserPositions";
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Error ${resp.status}`);
+  console.log("User positions filled!");
+}
+
+async function getUserId(username) {
+  const url = `/loginPage/api/getUserId/${username}`;
+  const resp = await fetch(url, { headers: { "Accept": "application/json" } });
+  if (!resp.ok) throw new Error(`getUserId failed: ${resp.status}`);
+  const userId = await resp.json();    // e.g. 1
+  return userId;
+}
+
+async function getUserId(username) {
+  const url = `/loginPage/api/getUserId/${username}`;
+  const resp = await fetch(url, {
+    headers: { "Accept": "application/json" }
+  });
+  if (!resp.ok) throw new Error(`getUserId failed: ${resp.status}`);
+  const userId = await resp.json();
+  return userId;
+}
+
 function initProfileModal() {
   const openBtn  = document.querySelector('#profilePanel .value:first-of-type');
   const modal    = document.getElementById('pf-modal');
@@ -164,16 +191,17 @@ closeBtn.addEventListener('click', async () => {
       const url = `/loginPage/api/updateUser/${newUsername}/${pi.value}/${username}`;
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`Error ${resp.status}`);
-      updateOnlineUser(newUsername, pi.value, email);
+       await updateOnlineUser(newUsername, pi.value, email);
       }
       else
       {
       const url = `/loginPage/api/updateUsername/${newUsername}/${username}`;
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`Error ${resp.status}`);
-      updateOnlineUser(newUsername, password, email);
+       await updateOnlineUser(newUsername, password, email);
       }
-      updateUserAndCoordinates(newUsername, lat, lon, username);
+      await updateUserAndCoordinates(newUsername, lat, lon, username);
+      fillUserPositions();
       username = newUsername;
     } else if (exists) {
       alert("Username already taken!");
@@ -242,19 +270,10 @@ inputs.forEach(input=>{
 })
 
 
-// Ensure these globals exist somewhere in your module/script:
-// let username = 'currentUser';
-// let recipient = null;
-// const friendArea = document.getElementById('friendArea');
-// const messageArea = document.getElementById('messageArea');
-// const chatHeader = document.getElementById('chatHeader');
-
 friendArea.addEventListener('click', async (e) => {
-  // 1. Find the clicked friend <li>
   const li = e.target.closest('li.friend-message');
   if (!li) return;
 
-  // 2. Clear any previous selection and mark this li as selected
   friendArea
     .querySelectorAll('li.friend-message.selected')
     .forEach(el => el.classList.remove('selected'));
@@ -283,10 +302,6 @@ chatHeader.innerHTML = `
   </div>
 
 `;
-
-
-
-  // 5. Load old messages (if asynchronous, await it)
   try {
     await sendOldMessages();
   } catch (err) {
@@ -295,7 +310,6 @@ chatHeader.innerHTML = `
     return;
   }
 
-  // 6. Fetch all user positions
   let userPositions;
   try {
     const resp = await fetch('/loginPage/api/userPositions');
@@ -309,24 +323,20 @@ chatHeader.innerHTML = `
     return;
   }
 
-  // 7. Find this user’s position
   const pos = userPositions.find(p => p.username === recipient);
   if (!pos || recipient === username) {
-    chatHeader.textContent = `${recipient} – location unknown`;
+    chatHeader.textContent = `${recipient}`;
     return;
   }
 
-  // 8. Get the current user’s location
   let current;
   try {
-    current = await getCurrentLocation(); // should return { lat, lon }
+    current = await getCurrentLocation();
   } catch (err) {
     console.error('Error getting current location:', err);
     chatHeader.textContent = `${recipient} – data unavailable`;
     return;
   }
-
-  // 9. Compute distance and country in parallel
   try {
     const [km, country] = await Promise.all([
       getDrivingDistance(pos.latitude, pos.longitude, current.lat, current.lon),
@@ -362,13 +372,13 @@ async function saveCoordinates(lat, lon, username) {
 
 async function updateOnlineUser(new_username, new_password, new_email) {
   const url = `/loginPage/api/updateOnlineUser/${new_username}/${new_password}/${new_email}`;
-  const resp = await fetch(url); // defaults to GET
+  const resp = await fetch(url);
   if (!resp.ok) throw new Error(`Error ${resp.status}`);
 }
 
 async function updateCoordinates(lat, lon, username) {
   const url = `/loginPage/api/updatePosition/${lat}/${lon}/${username}`;
-  const resp = await fetch(url); // defaults to GET
+  const resp = await fetch(url);
   if (!resp.ok) throw new Error(`Error ${resp.status}`);
 }
 
@@ -383,7 +393,7 @@ async function connect(event) {
     username = document.querySelector('#name').value.trim();
     password = document.querySelector('#password').value.trim();
     email = document.querySelector('#email').value.trim();
-//    getUserPositions();
+
      try {
         const users = await getJson('/loginPage/api/users');
 
@@ -408,6 +418,8 @@ async function connect(event) {
        usernamePage.classList.add('hidden');
        chatPage.classList.remove('hidden');
        friendPage.classList.remove('hidden');
+       settings.classList.remove('hidden');
+
        initProfileModal();
        var socket = new SockJS('/ws');
        stompClient = Stomp.over(socket);
@@ -451,21 +463,25 @@ function onError(error) {
     connectingElement.style.color = 'red';
 }
 
-function sendMessage(event) {
+async function sendMessage(event) {
     event.preventDefault();
 
     var messageContent = messageInput.value.trim();
-    if (messageContent && stompClient) {
+    if (messageContent && stompClient)
+    {
+     const senderId = await getUserId(username);
+     console.log('User id: ', senderId);
         var chatMessage = {
             sender: username,
             content: messageContent,
             recipient: recipient,
+            user_id: senderId,
             type: 'CHAT'
         };
+    stompClient.send("/app/chat.sendPrivateMessage/" + recipient, {}, JSON.stringify(chatMessage));
+    stompClient.send("/app/chat.sendPrivateMessage/" + username, {}, JSON.stringify(chatMessage));
 
-        stompClient.send("/app/chat.sendPrivateMessage/" + recipient, {}, JSON.stringify(chatMessage));
-        stompClient.send("/app/chat.sendPrivateMessage/" + username, {}, JSON.stringify(chatMessage));
-        messageInput.value = '';
+    messageInput.value = '';
     }
 }
 
@@ -503,6 +519,7 @@ async function renderFriend(user, onlineSet) {
   const name = document.createElement('span');
   name.textContent = ' ' + user.username;
   li.appendChild(name);
+
 
 
   friendArea.appendChild(li);
@@ -581,6 +598,8 @@ function onMessageReceived(payload) {
     }
 
      else {
+console.log("sender: " + message.sender + "recipient: " + recipient);
+
         messageElement.classList.add('chat-message');
 
         var avatarElement = document.createElement('i');
@@ -593,7 +612,10 @@ function onMessageReceived(payload) {
         var usernameText = document.createTextNode(message.sender);
         usernameElement.appendChild(usernameText);
         messageElement.appendChild(usernameElement);
+
+
     }
+
 
     var textElement = document.createElement('p');
     var messageText = document.createTextNode(message.content || "Message content is missing.");
@@ -602,6 +624,7 @@ function onMessageReceived(payload) {
 
     messageArea.appendChild(messageElement);
     messageArea.scrollTop = messageArea.scrollHeight;
+
 }
 
 function getAvatarColor(messageSender) {
@@ -614,7 +637,6 @@ function getAvatarColor(messageSender) {
 }
 usernameForm.addEventListener('submit', connect);
 messageForm.addEventListener('submit', sendMessage);
-
 
 
 

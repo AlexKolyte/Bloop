@@ -295,7 +295,6 @@ public class DBManager {
 
         try {
             connection = DriverManager.getConnection(DATABASE_URL, username, password);
-
             String query = "SELECT * FROM user";
             statement = connection.prepareStatement(query);
 
@@ -333,13 +332,14 @@ public class DBManager {
         try (Connection connection = DriverManager.getConnection(DATABASE_URL, DBManager.username, DBManager.password)) {
             connection.setAutoCommit(false);
 
-            String insertUserSQL = "INSERT INTO user_directory.message (content, sender, recipient) VALUES (?, ?, ?)";
+            String insertUserSQL = "INSERT INTO user_directory.message (content, sender, recipient, user_id) VALUES (?, ?, ?, ?)";
             try (PreparedStatement userStatement = connection.prepareStatement(insertUserSQL, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 userStatement.setString(1, chatMessage.getContent());
                 userStatement.setString(2, chatMessage.getSender());
                 userStatement.setString(3, chatMessage.getRecipient());
+                userStatement.setInt(4, chatMessage.getUser_id());
                 int affectedRows = userStatement.executeUpdate();
-                ChatController.messages.add(new ChatMessage(chatMessage.getContent(), chatMessage.getSender(), chatMessage.getRecipient()));
+                ChatController.messages.add(new ChatMessage(chatMessage.getContent(), chatMessage.getSender(), chatMessage.getRecipient(), chatMessage.getUser_id()));
                 if (affectedRows == 0) {
                     throw new SQLException("Creating order failed, no rows affected.");
                 }
@@ -561,9 +561,10 @@ public class DBManager {
                 String content = resultSet.getString("content");
                 String sender = resultSet.getString("sender");
                 String recipient = resultSet.getString("recipient");
+                int userId = resultSet.getInt(("user_id"));
 
                 if(content!=null) {
-                    ChatController.messages.add(new ChatMessage(content, sender, recipient));
+                    ChatController.messages.add(new ChatMessage(content, sender, recipient, userId));
                 }
             }
         } catch (SQLException e) {
@@ -585,4 +586,132 @@ public class DBManager {
         }
         return null;
     }
+    public static boolean deleteUser(String username) {
+        String sql = "DELETE FROM user_directory.`user` WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, DBManager.username, DBManager.password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            int rows = stmt.executeUpdate();
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static int countUsers() {
+        String sql = "SELECT COUNT(*) AS total FROM user_directory.`user`";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, DBManager.username, DBManager.password);
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public static String getUserEmail(String username) {
+        String sql = "SELECT email FROM user_directory.`user` WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, DBManager.username, DBManager.password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("email");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static boolean positionExists(String username) {
+        String sql = "SELECT 1 FROM user_directory.position WHERE username = ? LIMIT 1";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, DBManager.username, DBManager.password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static void batchCreateUsers(java.util.List<User> users) {
+        String sql = "INSERT INTO user_directory.`user` (username, password, email) VALUES (?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            conn.setAutoCommit(false);
+            for (User u : users) {
+                stmt.setString(1, u.getUsername());
+                stmt.setString(2, u.getPassword());
+                stmt.setString(3, u.getEmail());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean updateEmailAndPosition(String username, String newEmail,
+                                                 String newLat, String newLon) {
+        String emailSql    = "UPDATE user_directory.`user` SET email = ? WHERE username = ?";
+        String positionSql = "UPDATE user_directory.position SET latitude = ?, longitude = ? WHERE username = ?";
+        Connection conn    = null;
+        PreparedStatement emailStmt = null;
+        PreparedStatement posStmt   = null;
+        try {
+            conn = DriverManager.getConnection(DATABASE_URL, username, password);
+            conn.setAutoCommit(false);
+
+            emailStmt = conn.prepareStatement(emailSql);
+            emailStmt.setString(1, newEmail);
+            emailStmt.setString(2, username);
+            emailStmt.executeUpdate();
+
+            posStmt = conn.prepareStatement(positionSql);
+            posStmt.setString(1, newLat);
+            posStmt.setString(2, newLon);
+            posStmt.setString(3, username);
+            posStmt.executeUpdate();
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (emailStmt != null) emailStmt.close();
+                if (posStmt   != null) posStmt.close();
+                if (conn      != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static boolean pingDatabase() {
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password)) {
+            return conn.isValid(2);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
+
+
