@@ -121,6 +121,7 @@ public class EmailService implements EmailSender, EmailVerification{
 
         try {
             javaMailSender.send(message);
+            System.out.println("Trying to send a message");
         }catch (MailSendException mailSendException){
             System.out.println("No email exists");
         }

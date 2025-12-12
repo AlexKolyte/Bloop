@@ -54,7 +54,7 @@ public class ChatController {
     @MessageMapping("/chat.sendPrivateMessage/{recipient}")
     public void sendPrivateMessage(@DestinationVariable String recipient, @Payload ChatMessage message) {
         int c = counter.incrementAndGet();
-        if (c % 2 == 1) {
+        if (c % 2 == 1 && message.getUser_id() != 0) {
             DBManager.saveMessage(message);
         }
 

@@ -4,6 +4,7 @@ import com.luv2code.springboot.demo.chat.ChatMessage;
 import com.luv2code.springboot.demo.config.WebSocketListener;
 import com.luv2code.springboot.demo.db.DBManager;
 import com.luv2code.springboot.demo.entity.User;
+import com.luv2code.springboot.demo.entity.UserDescription;
 import com.luv2code.springboot.demo.entity.UserPosition;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -20,6 +22,8 @@ public class UserRestController {
     public static HashSet<User> onlineUsers = new HashSet<>();
 
     public static HashSet<UserPosition> userPositions = new HashSet<>();
+
+    public static HashSet<UserDescription> userDescriptions = new HashSet<>();
     @PostConstruct
     public void fillUsers()
     {
@@ -55,7 +59,6 @@ public class UserRestController {
     }
     @GetMapping("/updateOnlineUser/{new_username}/{new_password}/{email}")
     public void updateOnlineUser(@PathVariable String new_username,@PathVariable String new_password, @PathVariable String email) {
-//        onlineUsers.add(new User(new_username, new_password, email));
         WebSocketListener.onlineUsers.add(new_username);
     }
     @GetMapping("/position/{lat}/{lon}/{username}")
@@ -91,6 +94,50 @@ public class UserRestController {
     public void updatePosition(@PathVariable String lat, @PathVariable String lon, @PathVariable String username) {
         DBManager.updateUserPosition(lat, lon, username);
     }
+    @GetMapping("/saveDescription/{username}/{description}")
+    public void saveDescription(@PathVariable String username, @PathVariable String description)
+    {
+        int pointer = 0;
+        boolean check = false;
+        int counter = -1;
+        List<UserDescription> userDescriptions1 = userDescriptions.stream().toList();
+        if(userDescriptions.size() == 0)
+        {
+            counter = 0;
+        }
+            for (int i = 0; i < userDescriptions1.size(); i++) {
+                if (userDescriptions1.get(i).getUsername().equals(username) && userDescriptions1.get(i).getDescription().equals(description)) {
+                    break;
+                } else if (userDescriptions1.get(i).getUsername().equals(username) && !userDescriptions1.get(i).getDescription().equals(description)) {
+                    check = true;
+                    pointer  = i;
+                    counter = 0;
+                } else {
+                    counter = 0;
+                }
+            }
+            if(counter == 0 && check)
+            {
+                userDescriptions1.get(pointer).setDescription(description);
+                DBManager.updateUserDescription(username, description);
+                userDescriptions.clear();
+                userDescriptions.addAll(userDescriptions1);
+
+            } else if (counter == 0 && !check) {
+                if(!DBManager.getUserDescription(username).equals(description)) {
+                    DBManager.saveDescription(username, description);
+                    userDescriptions.add(new UserDescription(username, description));
+                }
+            }
+        }
+
+
+
+    @GetMapping("/findRandomFriend/{username}")
+    public UserDescription findRandomFriend(@PathVariable String username)
+    {
+       return DBManager.findRandomFriend(username);
+    }
 
     @GetMapping("/userPositions")
     public HashSet<UserPosition> getUserPositions()
@@ -122,6 +169,17 @@ public class UserRestController {
         return -1;
     }
 
+    @PostConstruct
+    public void fillUserDescriptions()
+    {
+        DBManager.fillAllUserDescriptions();
+    }
+
+    @GetMapping("/getUserDescription/{username}")
+    public String getUserDescription(@PathVariable String username)
+    {
+        return DBManager.getUserDescription(username);
+    }
 
     @Nullable
     @GetMapping("/updateUserAndCoordinates/{new_username}/{lat}/{lon}/{old_username}")

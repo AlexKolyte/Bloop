@@ -4,10 +4,12 @@ import com.luv2code.springboot.demo.controller.ChatController;
 import com.luv2code.springboot.demo.chat.ChatMessage;
 import com.luv2code.springboot.demo.entity.User;
 import com.luv2code.springboot.demo.controller.UserRestController;
+import com.luv2code.springboot.demo.entity.UserDescription;
 import com.luv2code.springboot.demo.entity.UserPosition;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class DBManager {
 
@@ -50,8 +52,44 @@ public class DBManager {
         }
         return -1;
     }
+    public static void fillAllUserDescriptions()
+    {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
 
+        try {
+            connection = DriverManager.getConnection(DATABASE_URL, username, password);
 
+            int randomInt = (int) (Math.random() * UserRestController.userDescriptions.size());
+            String query = "SELECT * FROM user_descriptions";
+            statement = connection.prepareStatement(query);
+
+            resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("user_id");
+                String description = resultSet.getString("description");
+                UserRestController.userDescriptions.add(new UserDescription(getUsernameFromId(id), description));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public static void updateUserAndCoordinates(String new_username, String lat, String lon, String old_username)
     {
         String updateEmailSQL =
@@ -203,6 +241,99 @@ public class DBManager {
     }
 
 
+    public static String getUserDescription(String name)
+    {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = DriverManager.getConnection(DATABASE_URL, username, password);
+
+            String query = "SELECT * FROM user_descriptions where user_id=?";
+            statement = connection.prepareStatement(query);
+            statement.setInt(1, getUserId(name));
+
+            resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("user_id");
+                String description = resultSet.getString("description");
+                return "\uD835\uDDE8\uD835\uDE00\uD835\uDDF2\uD835\uDDFF\uD835\uDDFB\uD835\uDDEE\uD835\uDDFA\uD835\uDDF2: "+  name + "            ( ͡❛ ͜ʖ ͡❛)   \n \uD835\uDDD7\uD835\uDDF2\uD835\uDE00\uD835\uDDF0\uD835\uDDFF\uD835\uDDF6\uD835\uDDFD\uD835\uDE01\uD835\uDDF6\uD835\uDDFC\uD835\uDDFB: " + description;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return "";
+    }
+
+    public static UserDescription findRandomFriend(String name)
+    {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = DriverManager.getConnection(DATABASE_URL, username, password);
+
+            int randomInt = (int) (Math.random() * UserRestController.userDescriptions.size());
+            String query =
+                    "SELECT\n" +
+                            "  ud.*,\n" +
+                            "  u.*\n" +
+                            "FROM\n" +
+                            "  user_descriptions AS ud\n" +
+                            "  JOIN `user` AS u\n" +
+                            "    ON ud.user_id = u.id\n" +
+                            "WHERE\n" +
+                            "  u.username != ?\n" +
+                            "ORDER BY RAND()\n" +
+                            "LIMIT 1";
+
+            statement = connection.prepareStatement(query);
+            statement.setString(1,name);
+
+            resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("user_id");
+                String description = resultSet.getString("description");
+                return new UserDescription(getUsernameFromId(id), description);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
     public static void saveLastCoordinate()
     {
         Connection connection = null;
@@ -244,6 +375,46 @@ public class DBManager {
             }
         }
     }
+
+    public static String getUsernameFromId(int id)
+    {
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = DriverManager.getConnection(DATABASE_URL, username, password);
+
+            String query = "SELECT username FROM user where id=?";
+            statement = connection.prepareStatement(query);
+            statement.setInt(1, id);
+
+            resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                String name = resultSet.getString("username");
+                return name;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return "";
+    }
+
 
     public static int saveLastUser()
     {
@@ -362,7 +533,7 @@ public class DBManager {
         ResultSet resultSet = null;
 
         try {
-            connection = DriverManager.getConnection(DATABASE_URL, username, password);
+            connection = DriverManager.getConnection(DATABASE_URL, DBManager.username, password);
 
             String query = "SELECT id FROM user where username=?";
             statement = connection.prepareStatement(query);
@@ -423,6 +594,56 @@ public class DBManager {
         }
     }
 
+    public static void saveDescription(String username, String description)
+    {
+        String sql = "INSERT INTO user_directory.`user_descriptions` (user_id, description) VALUES (?, ?)";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, DBManager.username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            conn.setAutoCommit(false);
+                stmt.setInt(1, getUserId(username));
+                stmt.setString(2, description);
+                stmt.addBatch();
+
+            stmt.executeBatch();
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    public static void updateUserDescription(String username, String description)
+    {
+        try (Connection connection = DriverManager.getConnection(DATABASE_URL, DBManager.username, DBManager.password)) {
+            connection.setAutoCommit(false);
+
+//            String insertUserSQL = "INSERT INTO user_directory.position (username, latitude, longitude) VALUES (?, ?, ?)";
+            String insertUserSQL = "UPDATE user_directory.user_descriptions\n" +
+                    "SET\n" +
+                    "  description = ?\n" +
+                    "WHERE\n" +
+                    "  user_id  = ?;\n";
+            try (PreparedStatement userStatement = connection.prepareStatement(insertUserSQL, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                userStatement.setString(1, description);
+                userStatement.setInt(2, getUserId(username));
+
+                int affectedRows = userStatement.executeUpdate();
+
+                if (affectedRows == 0) {
+                    throw new SQLException("Creating order failed, no rows affected.");
+                }
+                connection.commit();
+                fillUserPositions();
+            } catch (SQLException e) {
+                connection.rollback();
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void updateUserPosition(String latitude, String longitude, String username)
     {
@@ -711,7 +932,202 @@ public class DBManager {
             return false;
         }
     }
+    public static List<User> getUsersByEmailDomain(String domain) {
+        List<User> matches = new ArrayList<>();
+        String sql = "SELECT username, password, email FROM user WHERE email LIKE ?";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + domain);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    matches.add(new User(
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getString("email")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return matches;
+    }
 
+    // 2) Get position for one user
+    public static UserPosition getUserPosition(String username) {
+        String sql = "SELECT latitude, longitude FROM position WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new UserPosition(
+                            username,
+                            rs.getString("latitude"),
+                            rs.getString("longitude")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // 3) Delete all descriptions older than given ID
+    public static int deleteOldDescriptions(int maxId) {
+        String sql = "DELETE FROM user_descriptions WHERE id < ?";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, maxId);
+            return stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // 4) Count total messages per user
+    public static int countMessagesForUser(int userId) {
+        String sql = "SELECT COUNT(*) AS total FROM message WHERE user_id = ?";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // 5) Batch update user passwords (e.g., force-reset)
+    public static void batchResetPasswords(List<Integer> userIds, String defaultPassword) {
+        String sql = "UPDATE user SET password = ? WHERE id = ?";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            conn.setAutoCommit(false);
+            for (int id : userIds) {
+                stmt.setString(1, defaultPassword);
+                stmt.setInt(2, id);
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 6) Find nearest neighbour by geolocation (Haversine formula in SQL)
+    public static List<UserPosition> findClosestUsers(
+            double lat, double lon, double maxDistanceKm) {
+        List<UserPosition> nearby = new ArrayList<>();
+        String sql =
+                "SELECT username, latitude, longitude,\n" +
+                        "   (6371 * acos(\n" +
+                        "      cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?))\n" +
+                        "    + sin(radians(?)) * sin(radians(latitude))\n" +
+                        "   )) AS distance\n" +
+                        "FROM position\n" +
+                        "HAVING distance <= ?\n" +
+                        "ORDER BY distance ASC\n" +
+                        "LIMIT 20";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDouble(1, lat);
+            stmt.setDouble(2, lon);
+            stmt.setDouble(3, lat);
+            stmt.setDouble(4, maxDistanceKm);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    nearby.add(new UserPosition(
+                            rs.getString("username"),
+                            rs.getString("latitude"),
+                            rs.getString("longitude")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return nearby;
+    }
+
+    // 7) Get summary: average number of messages per user
+    public static double averageMessagesPerUser() {
+        String sql =
+                "SELECT AVG(msg_count) AS avg_msgs FROM (\n" +
+                        "   SELECT user_id, COUNT(*) AS msg_count\n" +
+                        "   FROM message GROUP BY user_id\n" +
+                        ") AS sub;";
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getDouble("avg_msgs");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+
+    // 8) Archive old messages into another table
+    public static int archiveMessagesBefore(Date cutoff) {
+        String insertSql =
+                "INSERT INTO message_archive (content, sender, recipient, user_id, sent_time)\n" +
+                        "  SELECT content, sender, recipient, user_id, NOW()\n" +
+                        "  FROM message WHERE sent_time < ?";
+        String deleteSql = "DELETE FROM message WHERE sent_time < ?";
+        int moved = 0;
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password);
+             PreparedStatement ins = conn.prepareStatement(insertSql);
+             PreparedStatement del = conn.prepareStatement(deleteSql)) {
+            conn.setAutoCommit(false);
+            ins.setDate(1, cutoff);
+            moved += ins.executeUpdate();
+            del.setDate(1, cutoff);
+            del.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return moved;
+    }
+
+    // 9) Ping & metadata
+    public static DatabaseMetaData getMetadata() {
+        try (Connection conn = DriverManager.getConnection(DATABASE_URL, username, password)) {
+            return conn.getMetaData();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // 10) Export all users to CSV (returns String)
+    public static String exportUsersToCsv() {
+        StringBuilder csv = new StringBuilder("username,password,email\n");
+        List<User> users = getAllUsers();
+        for (User u : users) {
+            csv.append(u.getUsername()).append(',')
+                    .append(u.getPassword()).append(',')
+                    .append(u.getEmail()).append('\n');
+        }
+        return csv.toString();
+    }
+
+    // Re-useable helper: close quietly
+    private static void closeQuietly(AutoCloseable ac) {
+        if (ac != null) {
+            try { ac.close(); }
+            catch (Exception ignored) {}
+        }
+    }
 }
 
 

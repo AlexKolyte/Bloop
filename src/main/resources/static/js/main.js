@@ -275,19 +275,25 @@ friendArea.addEventListener('click', async (e) => {
   if (!li) return;
 
   friendArea
-    .querySelectorAll('li.friend-message.selected')
-    .forEach(el => el.classList.remove('selected'));
+  .querySelectorAll('li.friend-message.selected')
+  .forEach(el => el.classList.remove('selected'));
   li.classList.add('selected');
 
   // 3. Clear message area
-  messageArea.replaceChildren();  // IE-safe alternative: while (messageArea.firstChild) { messageArea.removeChild(messageArea.firstChild); }
+  messageArea.replaceChildren();
 
   // 4. Get the recipient username
   const userSpan = li.querySelector('span');
   const user = userSpan?.textContent.trim();
   if (!user) return;
 
+  else{
+
   recipient = user;
+   if(user.includes("bot")) {
+     await sendBotMessage();
+    }
+  }
 chatHeader.innerHTML = `
   <div class="header-content">
     <div class="recipient-wrapper">
@@ -300,10 +306,11 @@ chatHeader.innerHTML = `
       </div>
     </div>
   </div>
-
 `;
   try {
+  if(!user.includes("bot")){
     await sendOldMessages();
+    }
   } catch (err) {
     console.error('Failed to load old messages:', err);
     chatHeader.textContent = `${recipient} – messages unavailable`;
@@ -354,7 +361,20 @@ chatHeader.innerHTML = `
 
 
 
-
+async function sendBotMessage()
+{
+  var messageContent = "Use following commands: \n 1. '/' for see my profile \n 2. '?' Create or change my profile \n 3. '!' Find friends"
+  const senderId = await getUserId("bot");
+       console.log('User id: ', senderId);
+          var chatMessage = {
+              sender: "bot",
+              content: messageContent,
+              recipient: username,
+              user_id: 1,
+              type: 'CHAT'
+          };
+  stompClient.send("/app/chat.sendPrivateMessage/" + username, {}, JSON.stringify(chatMessage));
+}
 
 function onSignIn(googleUser) {
   var profile = googleUser.getBasicProfile();
@@ -440,9 +460,6 @@ function onConnected() {
 
     updateFriendArea();
     sendOldMessages();
-//    while (friendArea.firstChild) {
-//        friendArea.removeChild(friendArea.firstChild);
-//      }
 
     stompClient.send("/app/chat.addUser", {}, JSON.stringify({
         sender: username,
@@ -495,6 +512,7 @@ async function getJson(url) {
 async function renderFriend(user, onlineSet) {
   if (user.username === username) return;
 
+
   const li = document.createElement('li');
   li.classList.add('friend-message');
   li.style.backgroundColor = 'white';
@@ -526,6 +544,42 @@ async function renderFriend(user, onlineSet) {
 
 }
 
+
+function renderBot(botUser, onlineSet) {
+  const li = document.createElement('li');
+  li.classList.add('friend-message');
+  li.style.backgroundColor = 'white';
+
+  // AVATAR ICON (circle + online dot)
+  const av = document.createElement('i');
+  av.style.backgroundColor = getAvatarColor(botUser.username);
+
+  const dot = document.createElement('p');
+  dot.style.backgroundColor = '#07ba36';
+  av.appendChild(dot);
+  li.appendChild(av);
+
+  // BOT NAME
+  const name = document.createElement('span');
+  name.textContent = ` ${botUser.name}'s bot`;
+  name.style.marginLeft = '4px';
+  li.appendChild(name);
+
+    const botImg = document.createElement('img');
+    botImg.src = '/image/bot icon.png';  // adjust to your path
+    botImg.alt = 'Bot';
+    botImg.classList.add('bot-icon');
+    // optional styling
+    botImg.style.width  = '24px';
+    botImg.style.height = '24px';
+    botImg.style.marginLeft = '8px';
+    li.appendChild(botImg);
+
+  friendArea.appendChild(li);
+}
+
+
+
 async function updateFriendArea() {
   try {
 
@@ -539,8 +593,13 @@ async function updateFriendArea() {
       getJson('/loginPage/api/users'),
       getJson('/loginPage/api/onlineUsers')
     ]);
+
     const onlineSet = new Set(onlineUsersArr.map(u => u.username));
+//    const botUser = { username: 'Bot', name: username };
+//    renderBot(botUser, onlineSet);
     users.forEach(u => renderFriend(u, onlineSet));
+
+
 
     friendArea.scrollTop = savedScroll;
     friendArea.style.overflowY = 'auto';
@@ -585,7 +644,41 @@ async function sendOldMessages() {
   }
 }
 
-function onMessageReceived(payload) {
+
+async function findRandomFriend(name)
+{
+ const res = await fetch(`/loginPage/api/findRandomFriend/${name}`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch online users: ${res.status} ${res.statusText}`);
+  }
+
+  const data = await res.json();
+
+  return data;
+}
+//async function getContentFromUser(username)
+//{
+//
+//}
+async function getUserDescription(username) {
+  const url = `/loginPage/api/getUserDescription/${encodeURIComponent(username)}`;
+  const resp = await fetch(url, {
+    headers: { "Accept": "application/json" }
+  });
+  if (!resp.ok) {
+    throw new Error(`getUserDescription failed: ${resp.status}`);
+  }
+  // The controller returns a plain String, so the body is JSON text:
+  const description = await resp.text();
+  return description;    // e.g. "alex Loves hiking and biking"
+}
+
+
+async function onMessageReceived(payload) {
      var message = JSON.parse(payload.body);
      var messageElement = document.createElement('li');
 
@@ -598,6 +691,7 @@ function onMessageReceived(payload) {
     }
 
      else {
+
 console.log("sender: " + message.sender + "recipient: " + recipient);
 
         messageElement.classList.add('chat-message');
@@ -623,7 +717,97 @@ console.log("sender: " + message.sender + "recipient: " + recipient);
     messageElement.appendChild(textElement);
 
     messageArea.appendChild(messageElement);
+    if(message.recipient === "bot"){
+         //     let content = await getContentFromUser();
+              if(message.content === "/")
+              {
+              let description = await getUserDescription(username);
+              console.log('Description is: ',description);
+                        var chatMessage = {
+                            sender: "bot",
+                            content: description,
+                            recipient: username,
+                            user_id: 1,
+                            type: 'CHAT'
+                        };
+                stompClient.send("/app/chat.sendPrivateMessage/" + username, {}, JSON.stringify(chatMessage));
+              }
+              if(message.content ==="!")
+                            {
+
+                            const { username:friendName, description } = await findRandomFriend(username);
+                               var chatMessage = {
+                                            sender: "bot",
+                                            content: "𝐔𝐬𝐞𝐫 𝐟𝐨𝐮𝐧𝐝:    " + friendName +  "     𝐃𝐞𝐬𝐜𝐫𝐢𝐩𝐭𝐢𝐨𝐧: " + description,
+                                            recipient: username,
+                                            user_id: 1,
+                                            type: 'CHAT'
+                                                      };
+                              stompClient.send("/app/chat.sendPrivateMessage/" +username , {}, JSON.stringify(chatMessage));
+
+
+                            }
+              if(message.content === "?")
+              {
+               let response = "Tell me about yourself";
+               var chatMessage = {
+                                   sender: "bot",
+                                   content: response,
+                                   recipient: username,
+                                   user_id: 1,
+                                   type: 'CHAT'
+                               };
+                  stompClient.send("/app/chat.sendPrivateMessage/" + username, {}, JSON.stringify(chatMessage));
+               messageForm.addEventListener('submit', async e => {
+                 e.preventDefault();
+                 try {
+                   await saveDescription(username);
+                 } catch (err) {
+                   console.error(err);
+                 }
+               });
+              }
+
+              }
     messageArea.scrollTop = messageArea.scrollHeight;
+
+
+
+}
+
+
+
+async function fetchWithRetry(url, opts = {}, retries = 3) {
+  try {
+    const resp = await fetch(url, opts);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return resp;
+  }
+  catch (err) {
+    if (retries > 0) {
+      console.warn(`Fetch failed, retrying (${retries} left)…`, err);
+      // recurse with one fewer retry
+      return fetchWithRetry(url, opts, retries - 1);
+    }
+    // no retries left: rethrow
+    throw err;
+  }
+}
+
+async function getUserPositions() {
+  const resp = await fetchWithRetry('/loginPage/api/userPositions', {}, 5);
+  console.log('Filled user positions:', await resp.json());
+}
+
+async function saveDescription(username)
+{
+if(recipient === "bot"){
+var description = messageInput.value.trim();
+console.log('MESSAGE INPUT ', description)
+let url = `loginPage/api/saveDescription/${username}/${description}`;
+const resp = await fetch(url);
+if (!resp.ok) throw new Error(`saveDescription failed: ${resp.status}`);
+}
 
 }
 
